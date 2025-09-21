@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Career Guidance Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7fa;
+      padding: 20px;
+    }
+    h2 {
+      color: #333;
+    }
+    #chatbox {
+      background: #fff;
+      border: 1px solid #ccc;
+      height: 400px;
+      overflow-y: scroll;
+      padding: 15px;
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+    }
+    .message {
+      margin-bottom: 10px;
+    }
+    .user {
+      color: #2c3e50;
+    }
+    .bot {
+      color: green;
+    }
+    #userInput {
+      width: 70%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px;
+      font-size: 16px;
+      background: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🎓 Student Career Chatbot</h2>
+
+  <div id="chatbox"></div>
+
+  <input type="text" id="userInput" placeholder="Aapka career question yahan likhiye..." />
+  <button onclick="sendMessage()">Send</button>
+
+  <script>
+    const API_KEY = "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";
+    const chatbox = document.getElementById("chatbox");
+
+    function appendMessage(sender, text) {
+      const msg = document.createElement("div");
+      msg.className = "message " + sender;
+      msg.innerHTML = `<strong>${sender === 'user' ? '👤 You' : '🤖 Bot'}:</strong><br>${text}`;
+      chatbox.appendChild(msg);
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("userInput");
+      const userText = input.value.trim();
+      if (!userText) return;
+
+      appendMessage("user", userText);
+      input.value = "";
+
+      const fullPrompt = `
+Aap ek smart career guidance chatbot ho jo students ki queries ka jawab Hindi-English mix mein deta hai.
+
+Aapka kaam:
+- Student ke interest ke basis par 10 relevant educational fields batana
+- Phir India ke 10 reputed colleges batana jo un fields ke liye suitable ho
+- Sab kuch bullet points mein dikhana, ek ke neeche ek
+- Agar interest nahi diya gaya ho, toh politely interest puchhna
+
+Student Query: "${userText}"
+
+Answer format:
+Educational Fields:
+- Field 1
+- Field 2
+...
+
+Top Indian Colleges:
+- College 1 (Location)
+- College 2 (Location)
+...
+      `;
+
+      const bodyData = {
+        model: "qwen/qwen2.5-vl-32b-instruct:free",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: fullPrompt }
+            ]
+          }
+        ]
+      };
+
+      try {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + API_KEY,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://your-website.com",  // Optional
+            "X-Title": "Career Chatbot"                  // Optional
+          },
+          body: JSON.stringify(bodyData)
+        });
+
+        const data = await response.json();
+        const reply = data.choices?.[0]?.message?.content || "Mujhe koi jawab nahi mila.";
+        appendMessage("bot", reply);
+      } catch (err) {
+        console.error(err);
+        appendMessage("bot", "⚠️ Kshama kijiye, kuch samasya ho gayi. Phir se try kijiye.");
+      }
+    }
+  </script>
+</body>
+</html>
